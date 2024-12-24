@@ -2,6 +2,7 @@ package com.jhryu.index.impl;
 
 import com.jhryu.index.IndexFields;
 import com.jhryu.index.Record;
+import com.jhryu.query.ast.IndexSearchQuery;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -28,18 +29,14 @@ public class LuceneIndexSearcher implements AutoCloseable, IndexFields {
         directory = NIOFSDirectory.open(p);
         reader = DirectoryReader.open(directory);
     }
-
-    public List<String> search(Map<String, String> query) throws IOException {
+    public List<String> search(IndexSearchQuery query) throws IOException {
         IndexSearcher searcher = new IndexSearcher(reader);
-        BooleanQuery.Builder q = new BooleanQuery.Builder();
-        query.forEach((k, v) -> {
-            Term term = new Term(k, v);
-            q.add(v.contains("*") ? new WildcardQuery(term) : new TermQuery(term), Occur.MUST);
-        });
-        if (query.size() == 0)
-            q.add(new WildcardQuery(new Term(key, "*")), Occur.MUST);
+        IndexQueryBuilder queryBulder = new IndexQueryBuilder();
+        query.accept(queryBulder);
+        Query q = queryBulder.build();
+        System.out.println(q);
         SortedNumericSortField sortField = new SortedNumericSortField(_time, Type.LONG, true);
-        ScoreDoc[] hits = searcher.search(q.build(), 1000, new Sort(sortField)).scoreDocs;
+        ScoreDoc[] hits = searcher.search(q, 1000, new Sort(sortField)).scoreDocs;
         List<String> keys = new ArrayList<>();
         for (ScoreDoc doc : hits) {
             Document d = searcher.doc(doc.doc);
@@ -47,17 +44,12 @@ public class LuceneIndexSearcher implements AutoCloseable, IndexFields {
         }
         return keys;
     }
-
-    public void search(Map<String, String> query, Consumer<Record> consumer) throws IOException {
+    public void search(IndexSearchQuery query, Consumer<Record> consumer) throws IOException {
         IndexSearcher searcher = new IndexSearcher(reader);
-        BooleanQuery.Builder q = new BooleanQuery.Builder();
-        query.forEach((k, v) -> {
-            Term term = new Term(k, v);
-            q.add(v.contains("*") ? new WildcardQuery(term) : new TermQuery(term), Occur.MUST);
-        });
-        if (query.size() == 0)
-            q.add(new WildcardQuery(new Term(key, "*")), Occur.MUST);
-        searcher.search(q.build(), new StreamingCollector() {
+        IndexQueryBuilder queryBulder = new IndexQueryBuilder();
+        query.accept(queryBulder);
+        Query q = queryBulder.build();
+        searcher.search(q, new StreamingCollector() {
             @Override
             public void collect(int doc) {
                 try {

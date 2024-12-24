@@ -4,8 +4,7 @@ import com.jhryu.index.Record;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class LuceneIndexWriterTest {
 
@@ -30,7 +29,7 @@ public class LuceneIndexWriterTest {
         }
     }
 
-    private static class TestData implements Record {
+    private static class TestData extends Record {
         private String key;
         private Map<String, Field> fieldMap = new LinkedHashMap<>();
 
@@ -55,6 +54,11 @@ public class LuceneIndexWriterTest {
 
         public void addField(String name, String value) {
             fieldMap.put(name, Field.of(value));
+        }
+
+        @Override
+        public Set<String> storeFieldSet() {
+            return new HashSet<>(Arrays.asList("agent_id"));
         }
     }
 

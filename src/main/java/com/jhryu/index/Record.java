@@ -1,15 +1,21 @@
 package com.jhryu.index;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
-public interface Record {
-    long getTimestamp();
+public abstract class Record {
+    public abstract long getTimestamp();
 
-    String getKey();
+    public abstract String getKey();
 
-    Map<String, Field> getIndexFields();
+    public abstract Map<String, Field> getIndexFields();
 
-    class Field {
+    public Set<String> storeFieldSet() {
+        return new HashSet<>();
+    }
+
+    public static class Field {
         public FieldType type;
         public String value;
 
@@ -46,7 +52,7 @@ public interface Record {
         }
     }
 
-    enum FieldType {
+    public static enum FieldType {
         NUMBER, STRING
     }
 }

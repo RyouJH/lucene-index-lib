@@ -1,6 +1,8 @@
 package com.jhryu.index;
 
 import com.jhryu.index.impl.LuceneIndexSearcher;
+import com.jhryu.query.ast.FieldMatchQuery;
+import com.jhryu.query.ast.FieldNotEqualQuery;
 import org.junit.Test;
 
 import java.io.File;
@@ -12,9 +14,7 @@ public class LuceneIndexSearcherTest {
     public void test() {
         File indexDir = new File("target/index");
         try (LuceneIndexSearcher searcher = new LuceneIndexSearcher(indexDir)) {
-            Map<String, String> q = new LinkedHashMap<>();
-            q.put("agent_id","GSI_02");
-            for (String key : searcher.search(q)) {
+            for (String key : searcher.search(FieldNotEqualQuery.of("agent_id","GSI_02"))) {
                 System.out.println(key);
             }
         } catch (Exception e) {
